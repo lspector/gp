@@ -1,0 +1,20 @@
+# gp
+
+;; This code defines and runs a genetic programming system on the problem
+;; of finding a function that fits a particular set of [x y] pairs.
+
+;; The aim here is mostly to demonstrate how genetic programming can be 
+;; implemented in Clojure simply and clearly, and several things are 
+;; done in somewhat inefficient and/or non-standard ways. But this should 
+;; provide a reasonable starting point for developing more efficient/
+;; standard/capable systems. 
+
+## Usage
+
+See evolvefn.clj.
+
+## License
+
+Copyright (C) 2012 Lee Spector
+
+Distributed under the Eclipse Public License, the same as Clojure.
