@@ -2,9 +2,10 @@
 
 ;; 20111113 update: handles functions of different arities
 ;; 20120829 update: packaged into the gp project
-;; 20131115 update: eliminated use of zippers
+;; 20131115 update: renamed with "zip" suffix; suffixless version now avoids zippers
 
-(ns evolvefn.core)
+(ns gp.evolvefn-zip
+  (:require [clojure.zip :as zip]))
 
 ;; This code defines and runs a genetic programming system on the problem
 ;; of finding a function that fits a particular set of [x y] pairs.
@@ -54,7 +55,7 @@
 (defn random-code
   [depth]
   (if (or (zero? depth)
-          (zero? (rand-int 2))) ; might want to try (rand-int (count function-table))
+          (zero? (rand-int 2)))
     (random-terminal)
     (let [f (random-function)]
       (cons f (repeatedly (get function-table f)
@@ -87,74 +88,59 @@
 ;; (let [i (random-code 3)] (println (error i) "from individual" i))
 
 ;; To help write mutation and crossover functions we'll write a utility
-;; function that returns a random subtree from an expression and another that
-;; replaces a random subtree of an expression.
+;; function that extracts something from an expression and another that
+;; inserts something into an expression.
 
 (defn codesize [c]
   (if (seq? c)
     (count (flatten c))
     1))
 
-(defn random-subtree 
-  [i]
-  (if (zero? (rand-int (codesize i)))
-    i
-    (random-subtree 
-      (rand-nth
-        (apply concat
-               (map #(repeat (codesize %) %)
-                    (rest i)))))))
+(defn at-index 
+  "Returns a subtree of tree indexed by point-index in a depth first traversal."
+  [tree point-index]
+  (let [index (mod (Math/abs point-index) (codesize tree))
+        zipper (zip/seq-zip tree)]
+    (loop [z zipper i index]
+      (if (zero? i)
+        (zip/node z)
+        (if (seq? (zip/node z)) 
+          (recur (zip/next (zip/next z)) (dec i))
+          (recur (zip/next z) (dec i)))))))
 
-;(random-subtree '(+ (* x (+ y z)) w))
+(defn insert-at-index
+  "Returns a copy of tree with the subtree formerly indexed by
+point-index (in a depth-first traversal) replaced by new-subtree."
+  [tree point-index new-subtree]
+  (let [index (mod (Math/abs point-index) (codesize tree))
+        zipper (zip/seq-zip tree)]
+    (loop [z zipper i index]
+      (if (zero? i)
+        (zip/root (zip/replace z new-subtree))
+        (if (seq? (zip/node z))
+          (recur (zip/next (zip/next z)) (dec i))
+          (recur (zip/next z) (dec i)))))))
 
-(defn replace-random-subtree
-  [i replacement]
-  (if (zero? (rand-int (codesize i)))
-    replacement
-    (let [position-to-change 
-          (rand-nth 
-            (apply concat
-                   (map #(repeat (codesize %1) %2)
-                        (rest i)
-                        (iterate inc 1))))]
-          (map #(if %1 (replace-random-subtree %2 replacement) %2)
-               (for [n (iterate inc 0)] (= n position-to-change))
-               i))))
-
-;(replace-random-subtree '(0 (1) (2 2) (3 3 3) (4 4 4 4) (5 5 5 5 5) (6 6 6 6 6 6 6)) 'x)
-
-;(replace-random-subtree '(+ (* x (+ y z)) w) 3)
+;; Now the mutate and crossover functions are easy to write:
 
 (defn mutate
   [i]
-  (replace-random-subtree i (random-code 2)))
-
-;(mutate '(+ (* x (+ y z)) w))
+  (insert-at-index i 
+                   (rand-int (codesize i)) 
+                   (random-code 2)))
 
 (defn crossover
   [i j]
-  (replace-random-subtree i (random-subtree j)))
+  (insert-at-index i 
+                   (rand-int (codesize i)) 
+                   (at-index j (rand-int (codesize j)))))
 
-;(crossover '(+ (* x (+ y z)) w) '(/ a (/ (/ b c) d)))
+;; We can see some mutations with:
+;; (let [i (random-code 2)] (println (mutate i) "from individual" i))
 
-; We can see some mutations with:
-; (let [i (random-code 2)] (println (mutate i) "from individual" i))
-
-; and crossovers with:
-; (let [i (random-code 2) j (random-code 2)]
-;   (println (crossover i j) "from" i "and" j))
-
-;(let [e '(* x 2)
-;      m (mutate e)]
-; (println (error e) e)
-; (println (error m) m))
-;
-;(let [e1 '(* x 2)
-;      e2 '(+ (* x 3) 4)
-;      c (crossover e1 e2)]
-; (println (error e1) e1)
-; (println (error e2) e2)
-; (println (error c) c))
+;; and crossovers with:
+;; (let [i (random-code 2) j (random-code 2)]
+;;   (println (crossover i j) "from" i "and" j))
 
 ;; We'll also want a way to sort a populaty by error that doesn't require 
 ;; lots of error re-computation:
@@ -182,7 +168,7 @@
   [popsize]
   (println "Starting evolution...")
   (loop [generation 0
-         population (sort-by-error (repeatedly popsize #(random-code 4)))]
+         population (sort-by-error (repeatedly popsize #(random-code 2)))]
     (let [best (first population)
           best-error (error best)]
       (println "======================")
@@ -202,7 +188,7 @@
             (concat
               (repeatedly (* 1/2 popsize) #(mutate (select population 7)))
               (repeatedly (* 1/4 popsize) #(crossover (select population 7)
-                                                     (select population 7)))
+                                                      (select population 7)))
               (repeatedly (* 1/4 popsize) #(select population 7)))))))))
 
 
