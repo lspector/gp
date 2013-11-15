@@ -142,7 +142,7 @@ point-index (in a depth-first traversal) replaced by new-subtree."
 ;; (let [i (random-code 2) j (random-code 2)]
 ;;   (println (crossover i j) "from" i "and" j))
 
-;; We'll also want a way to sort a populaty by error that doesn't require 
+;; We'll also want a way to sort a population by error that doesn't require 
 ;; lots of error re-computation:
 
 (defn sort-by-error

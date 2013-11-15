@@ -156,7 +156,7 @@
 ; (println (error e2) e2)
 ; (println (error c) c))
 
-;; We'll also want a way to sort a populaty by error that doesn't require 
+;; We'll also want a way to sort a population by error that doesn't require 
 ;; lots of error re-computation:
 
 (defn sort-by-error
