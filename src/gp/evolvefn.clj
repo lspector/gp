@@ -4,7 +4,7 @@
 ;; 20120829 update: packaged into the gp project
 ;; 20131115 update: eliminated use of zippers
 
-(ns evolvefn.core)
+(ns gp.evolvefn)
 
 ;; This code defines and runs a genetic programming system on the problem
 ;; of finding a function that fits a particular set of [x y] pairs.

@@ -1,8 +1,9 @@
-;; Lee Spector (lspector@hampshire.edu) 20131115
+;; Lee Spector (lspector@hampshire.edu) 20121001
 
-(ns gp.even3parity)
+(ns gp.even3parity_zip 
+  (:require [clojure.zip :as zip]))
 
-;; This is a version of evolvefn.clj that was modified to solve a
+;; This is a version of evolvefn_zip.clj that was modified to solve a
 ;; different problem, of determining whether or not number of true
 ;; inputs out of three boolean inputs is even. See evolvefn.clj 
 ;; for more extensive comments on the shared code. The changes made 
@@ -68,37 +69,42 @@
     (count (flatten c))
     1))
 
-(defn random-subtree 
-  [i]
-  (if (zero? (rand-int (codesize i)))
-    i
-    (random-subtree 
-      (rand-nth
-        (apply concat
-               (map #(repeat (codesize %) %)
-                    (rest i)))))))
+(defn at-index 
+  "Returns a subtree of tree indexed by point-index in a depth first traversal."
+  [tree point-index]
+  (let [index (mod (Math/abs point-index) (codesize tree))
+        zipper (zip/seq-zip tree)]
+    (loop [z zipper i index]
+      (if (zero? i)
+        (zip/node z)
+        (if (seq? (zip/node z)) 
+          (recur (zip/next (zip/next z)) (dec i))
+          (recur (zip/next z) (dec i)))))))
 
-(defn replace-random-subtree
-  [i replacement]
-  (if (zero? (rand-int (codesize i)))
-    replacement
-    (let [position-to-change 
-          (rand-nth 
-            (apply concat
-                   (map #(repeat (codesize %1) %2)
-                        (rest i)
-                        (iterate inc 1))))]
-          (map #(if %1 (replace-random-subtree %2 replacement) %2)
-               (for [n (iterate inc 0)] (= n position-to-change))
-               i))))
+(defn insert-at-index
+  "Returns a copy of tree with the subtree formerly indexed by
+point-index (in a depth-first traversal) replaced by new-subtree."
+  [tree point-index new-subtree]
+  (let [index (mod (Math/abs point-index) (codesize tree))
+        zipper (zip/seq-zip tree)]
+    (loop [z zipper i index]
+      (if (zero? i)
+        (zip/root (zip/replace z new-subtree))
+        (if (seq? (zip/node z))
+          (recur (zip/next (zip/next z)) (dec i))
+          (recur (zip/next z) (dec i)))))))
 
 (defn mutate
   [i]
-  (replace-random-subtree i (random-code 2)))
+  (insert-at-index i 
+                   (rand-int (codesize i)) 
+                   (random-code 2)))
 
 (defn crossover
   [i j]
-  (replace-random-subtree i (random-subtree j)))
+  (insert-at-index i 
+                   (rand-int (codesize i)) 
+                   (at-index j (rand-int (codesize j)))))
 
 (defn sort-by-error
   [population]
