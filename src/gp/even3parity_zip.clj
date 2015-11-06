@@ -27,7 +27,7 @@
    [true true false true]
    [true true true false]])
 
-(def function-table (zipmap '(And Or nand nor not)
+(def function-table (zipmap '(and or nand nor not)
                             '(2   2  2    2   1)))
 
 (defn random-function 
@@ -46,10 +46,6 @@
     (let [f (random-function)]
       (cons f (repeatedly (get function-table f)
                           #(random-code (dec depth)))))))
-
-(defn And [a b] (and a b)) ;; needed because and is a macro
-
-(defn Or [a b] (or a b)) ;; needed because or is a macro
 
 (defn nand [a b] (not (and a b)))
 
@@ -140,8 +136,8 @@ point-index (in a depth-first traversal) replaced by new-subtree."
           (inc generation)
           (sort-by-error      
             (concat
-              (repeatedly (* 5/10 popsize) #(mutate (select population 5)))
-              (repeatedly (* 4/10 popsize) #(crossover (select population 5)
+              (repeatedly (* 1/10 popsize) #(mutate (select population 5)))
+              (repeatedly (* 8/10 popsize) #(crossover (select population 5)
                                                        (select population 5)))
               (repeatedly (* 1/10 popsize) #(select population 5)))))))))
 

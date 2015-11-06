@@ -130,8 +130,8 @@
           (inc generation)
           (sort-by-error      
             (concat
-              (repeatedly (* 5/10 popsize) #(mutate (select population 5)))
-              (repeatedly (* 4/10 popsize) #(crossover (select population 5)
+              (repeatedly (* 1/10 popsize) #(mutate (select population 5)))
+              (repeatedly (* 8/10 popsize) #(crossover (select population 5)
                                                        (select population 5)))
               (repeatedly (* 1/10 popsize) #(select population 5)))))))))
 
