@@ -26,7 +26,7 @@
    [true true false true]
    [true true true false]])
 
-(def function-table (zipmap '(And Or nand nor not)
+(def function-table (zipmap '(and or nand nor not)
                             '(2   2  2    2   1)))
 
 (defn random-function 
@@ -45,10 +45,6 @@
     (let [f (random-function)]
       (cons f (repeatedly (get function-table f)
                           #(random-code (dec depth)))))))
-
-(defn And [a b] (and a b)) ;; needed because and is a macro
-
-(defn Or [a b] (or a b)) ;; needed because or is a macro
 
 (defn nand [a b] (not (and a b)))
 
