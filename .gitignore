@@ -6,3 +6,11 @@
 /.lein-failures
 /checkouts
 /.lein-deps-sum
+.DS_Store
+.classpath
+.gorilla-port
+.nrepl-port
+.project
+.settings
+*~
+/target
